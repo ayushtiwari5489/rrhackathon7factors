@@ -1,0 +1,2688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RR Player Ranking Dashboard | Rankings · Comparison · Methodology</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏏</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Chart.js for circular charts (Donut & Radar) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root {
+  --bg-base: #0a0d18;
+  --bg-surface: #111628;
+  --bg-card: rgba(19, 26, 48, 0.88);
+  --bg-card-hover: rgba(28, 38, 70, 0.95);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-focus: rgba(255, 42, 133, 0.45);
+  
+  --rr-pink: #ff1988;
+  --rr-pink-glow: rgba(255, 25, 136, 0.35);
+  --rr-blue: #2563eb;
+  --rr-blue-glow: rgba(37, 99, 235, 0.35);
+  --rr-navy: #0e1630;
+  --rr-gold: #fbbf24;
+  --rr-cyan: #06b6d4;
+  --rr-purple: #8b5cf6;
+  --rr-emerald: #10b981;
+
+  --ink-primary: #f8fafc;
+  --ink-secondary: #94a3b8;
+  --ink-muted: #64748b;
+  --tint-pink: rgba(255, 25, 136, 0.12);
+  --tint-blue: rgba(37, 99, 235, 0.12);
+  --tint-gold: rgba(251, 191, 36, 0.12);
+  
+  --shadow-card: 0 12px 32px -4px rgba(0, 0, 0, 0.5), 0 4px 12px -2px rgba(0, 0, 0, 0.3);
+  --radius-lg: 18px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+}
+
+[data-theme="light"] {
+  --bg-base: #f4f6fb;
+  --bg-surface: #ffffff;
+  --bg-card: rgba(255, 255, 255, 0.94);
+  --bg-card-hover: #ffffff;
+  --border: rgba(15, 23, 42, 0.09);
+  --border-focus: rgba(225, 29, 114, 0.5);
+
+  --rr-pink: #e11d72;
+  --rr-pink-glow: rgba(225, 29, 114, 0.2);
+  --rr-blue: #1d4ed8;
+  --rr-blue-glow: rgba(29, 78, 216, 0.2);
+  --rr-navy: #1e293b;
+  --rr-gold: #d97706;
+  --rr-cyan: #0891b2;
+  --rr-purple: #7c3aed;
+  --rr-emerald: #059669;
+
+  --ink-primary: #0f172a;
+  --ink-secondary: #475569;
+  --ink-muted: #64748b;
+  --tint-pink: rgba(225, 29, 114, 0.08);
+  --tint-blue: rgba(29, 78, 216, 0.08);
+  --tint-gold: rgba(217, 119, 6, 0.08);
+  --shadow-card: 0 10px 25px -3px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-base);
+  background-image: 
+    radial-gradient(circle at 12% 10%, rgba(255, 25, 136, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 88% 18%, rgba(37, 99, 235, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+  background-attachment: fixed;
+  color: var(--ink-primary);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  line-height: 1.5;
+  padding-bottom: 60px;
+}
+
+.dashboard-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 20px;
+}
+
+/* Header */
+header.dash-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(255,25,136,0.2), rgba(37,99,235,0.2));
+  border: 1px solid rgba(255,25,136,0.35);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rr-pink);
+  margin-bottom: 8px;
+}
+
+.brand-badge .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--rr-pink);
+  box-shadow: 0 0 8px var(--rr-pink);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+h1 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #ffffff 30%, var(--rr-pink) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1.2;
+}
+[data-theme="light"] h1 {
+  background: linear-gradient(135deg, #0f172a 40%, var(--rr-pink) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.sub-title {
+  color: var(--ink-secondary);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Priority Navigation Tabs in Header */
+.priority-nav-tabs {
+  display: flex;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 3px;
+  gap: 3px;
+}
+.nav-tab-link {
+  text-decoration: none;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-secondary);
+  padding: 7px 14px;
+  border-radius: 9px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nav-tab-link:hover {
+  color: var(--ink-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+.nav-tab-link.p1 { border-left: 2px solid var(--rr-pink); }
+.nav-tab-link.p2 { border-left: 2px solid var(--rr-blue); }
+.nav-tab-link.p3 { border-left: 2px solid var(--rr-gold); }
+
+.theme-toggle-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--ink-primary);
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 17px;
+}
+.theme-toggle-btn:hover {
+  border-color: var(--rr-pink);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 25, 136, 0.2);
+}
+
+/* KPI Bar */
+.kpi-section {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+@media (max-width: 1080px) {
+  .kpi-section { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 580px) {
+  .kpi-section { grid-template-columns: 1fr; }
+}
+
+.kpi-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 25, 136, 0.3);
+}
+
+.kpi-info {
+  display: flex;
+  flex-direction: column;
+}
+.kpi-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  margin-bottom: 3px;
+}
+.kpi-value {
+  font-family: 'Outfit', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink-primary);
+}
+.kpi-sub {
+  font-size: 11.5px;
+  color: var(--ink-muted);
+}
+
+.kpi-circle-wrap {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.kpi-circle-svg {
+  transform: rotate(-90deg);
+  width: 52px;
+  height: 52px;
+}
+.kpi-circle-bg {
+  stroke: var(--border);
+  stroke-width: 5;
+  fill: none;
+}
+.kpi-circle-val {
+  stroke-width: 5;
+  stroke-linecap: round;
+  fill: none;
+  transition: stroke-dashoffset 1s ease-in-out;
+}
+.kpi-circle-text {
+  position: absolute;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  color: var(--ink-primary);
+}
+
+/* Priority Section Banners */
+.priority-header-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+.priority-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.priority-tag.p1 { color: var(--rr-pink); }
+.priority-tag.p2 { color: var(--rr-blue); }
+.priority-tag.p3 { color: var(--rr-gold); }
+
+.priority-tag .num-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #fff;
+}
+.p1 .num-badge { background: var(--rr-pink); box-shadow: 0 0 10px var(--rr-pink); }
+.p2 .num-badge { background: var(--rr-blue); box-shadow: 0 0 10px var(--rr-blue); }
+.p3 .num-badge { background: var(--rr-gold); color: #000; box-shadow: 0 0 10px var(--rr-gold); }
+
+/* Common Card & Tab Styles */
+.dash-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px 24px;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 24px;
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.section-title h2 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--ink-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title p {
+  font-size: 13px;
+  color: var(--ink-secondary);
+  margin-top: 3px;
+}
+
+.role-tabs {
+  display: inline-flex;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 2px;
+}
+.role-tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--ink-secondary);
+  padding: 7px 18px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.role-tab-btn:hover {
+  color: var(--ink-primary);
+}
+.role-tab-btn.active {
+  background: linear-gradient(135deg, var(--rr-pink), #d91470);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(255, 25, 136, 0.4);
+}
+
+/* ======================================================== */
+/* PRIORITY 1: ALL 10 CANDIDATES CIRCULAR SCORE MATRIX      */
+/* ======================================================== */
+.all-10-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+@media (max-width: 1200px) {
+  .all-10-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+  .all-10-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .all-10-grid { grid-template-columns: 1fr; }
+}
+
+.player-dial-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.player-dial-card:hover {
+  border-color: rgba(255, 25, 136, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.3);
+}
+.player-dial-card.selected-for-compare {
+  border-color: var(--rr-pink);
+  box-shadow: 0 0 16px rgba(255, 25, 136, 0.35);
+  background: linear-gradient(180deg, rgba(255, 25, 136, 0.12) 0%, var(--bg-surface) 100%);
+}
+
+.dial-rank-tag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink-secondary);
+}
+.player-dial-card.gold-tier .dial-rank-tag {
+  background: linear-gradient(135deg, #ffd700, #f59e0b);
+  color: #1a160d;
+}
+.player-dial-card.silver-tier .dial-rank-tag {
+  background: linear-gradient(135deg, #f1f5f9, #94a3b8);
+  color: #0f172a;
+}
+.player-dial-card.bronze-tier .dial-rank-tag {
+  background: linear-gradient(135deg, #fb923c, #c2410c);
+  color: #ffffff;
+}
+
+.dial-sample-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+.dial-sample-badge.caution {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.dial-circle-wrap {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  margin: 12px 0 8px;
+}
+.dial-circle-svg {
+  transform: rotate(-90deg);
+  width: 76px;
+  height: 76px;
+}
+.dial-circle-bg {
+  stroke: rgba(255, 255, 255, 0.07);
+  stroke-width: 6;
+  fill: none;
+}
+[data-theme="light"] .dial-circle-bg { stroke: rgba(0, 0, 0, 0.06); }
+.dial-circle-bar {
+  stroke-width: 6;
+  stroke-linecap: round;
+  fill: none;
+  transition: stroke-dashoffset 0.8s ease-in-out;
+}
+.dial-circle-center {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.dial-circle-score {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink-primary);
+  line-height: 1;
+}
+.dial-circle-pct {
+  font-size: 9.5px;
+  color: var(--ink-muted);
+  font-weight: 600;
+  margin-top: 1px;
+}
+
+.dial-player-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  margin-bottom: 2px;
+}
+.dial-player-role {
+  font-size: 11px;
+  color: var(--ink-secondary);
+}
+.dial-key-factors {
+  margin-top: 6px;
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+}
+.dial-mini-tag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--tint-blue);
+  color: var(--rr-blue);
+}
+
+/* Spotlight Dossier inside Rankings */
+.spotlight-dossier {
+  margin-top: 16px;
+  background: linear-gradient(135deg, rgba(255, 25, 136, 0.08), rgba(37, 99, 235, 0.08));
+  border: 1px solid rgba(255, 25, 136, 0.25);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+@media (max-width: 640px) {
+  .spotlight-dossier { flex-direction: column; align-items: flex-start; }
+}
+
+.spotlight-gauge-box {
+  position: relative;
+  width: 86px;
+  height: 86px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.spotlight-svg {
+  transform: rotate(-90deg);
+  width: 86px;
+  height: 86px;
+}
+.spotlight-ring-num {
+  font-family: 'Outfit', sans-serif;
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--ink-primary);
+  line-height: 1;
+}
+.spotlight-ring-lbl {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--rr-pink);
+  margin-top: 2px;
+}
+
+.spotlight-main-text {
+  flex: 1;
+}
+.spotlight-header-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.spotlight-player-title {
+  font-size: 16.5px;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+.spotlight-tier-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--tint-pink);
+  color: var(--rr-pink);
+}
+.spotlight-differential {
+  font-size: 13px;
+  color: var(--ink-secondary);
+  margin-top: 4px;
+}
+.spotlight-intel-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 12.5px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+}
+[data-theme="light"] .spotlight-intel-box {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #1e293b;
+}
+
+/* Roster Table with mini circular progress bars */
+.all-10-table-wrapper {
+  overflow-x: auto;
+  margin-top: 14px;
+}
+table.all-10-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+table.all-10-table th {
+  padding: 10px 12px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+table.all-10-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--ink-secondary);
+  vertical-align: middle;
+}
+table.all-10-table tr:hover {
+  background: var(--bg-card-hover);
+  cursor: pointer;
+}
+.table-player-cell {
+  font-weight: 700;
+  color: var(--ink-primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.table-mini-circle {
+  width: 32px;
+  height: 32px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.table-mini-circle svg {
+  transform: rotate(-90deg);
+  width: 32px;
+  height: 32px;
+}
+.table-score-val {
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink-primary);
+}
+
+/* ======================================================== */
+/* PRIORITY 2: HEAD-TO-HEAD COMPARISON ARENA               */
+/* ======================================================== */
+.comparison-arena {
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.06) 0%, var(--bg-card) 100%);
+  position: relative;
+  overflow: hidden;
+}
+.comparison-arena::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--rr-pink), var(--rr-blue));
+}
+
+.compare-control-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 16px 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+}
+
+.compare-pickers {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.picker-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.picker-lbl {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.picker-lbl.a { color: var(--rr-pink); }
+.picker-lbl.b { color: var(--rr-blue); }
+
+.picker-select {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  color: var(--ink-primary);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 8px;
+  outline: none;
+  cursor: pointer;
+  min-width: 220px;
+  transition: all 0.2s ease;
+}
+.picker-select:focus {
+  border-color: var(--rr-pink);
+  box-shadow: 0 0 10px rgba(255, 25, 136, 0.25);
+}
+
+.swap-btn {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  color: var(--ink-primary);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 15px;
+  margin-top: 14px;
+}
+.swap-btn:hover {
+  border-color: var(--rr-pink);
+  transform: rotate(180deg);
+  background: var(--tint-pink);
+}
+
+.quick-matchups {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.quick-matchup-pill {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  color: var(--ink-secondary);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.quick-matchup-pill:hover {
+  border-color: var(--rr-pink);
+  color: var(--ink-primary);
+  background: var(--tint-pink);
+}
+
+/* Tale of the Tape */
+.tale-of-tape {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 22px;
+}
+@media (max-width: 800px) {
+  .tale-of-tape { grid-template-columns: 1fr; }
+}
+
+.fighter-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+.fighter-card.side-a {
+  border-left: 4px solid var(--rr-pink);
+  background: linear-gradient(90deg, rgba(255, 25, 136, 0.08) 0%, var(--bg-surface) 100%);
+}
+.fighter-card.side-b {
+  border-right: 4px solid var(--rr-blue);
+  background: linear-gradient(270deg, rgba(37, 99, 235, 0.08) 0%, var(--bg-surface) 100%);
+  flex-direction: row-reverse;
+  text-align: right;
+}
+@media (max-width: 800px) {
+  .fighter-card.side-b {
+    flex-direction: row;
+    text-align: left;
+    border-right: 1px solid var(--border);
+    border-left: 4px solid var(--rr-blue);
+  }
+}
+
+.fighter-gauge {
+  position: relative;
+  width: 78px;
+  height: 78px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.fighter-svg {
+  transform: rotate(-90deg);
+  width: 78px;
+  height: 78px;
+}
+.fighter-bg {
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 6;
+  fill: none;
+}
+[data-theme="light"] .fighter-bg { stroke: rgba(0, 0, 0, 0.08); }
+.fighter-ring {
+  stroke-width: 6;
+  stroke-linecap: round;
+  fill: none;
+  transition: stroke-dashoffset 0.8s ease;
+}
+.fighter-gauge-center {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.fighter-score-num {
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ink-primary);
+  line-height: 1;
+}
+.fighter-score-lbl {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+}
+
+.fighter-info {
+  flex: 1;
+  overflow: hidden;
+}
+.fighter-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--ink-primary);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fighter-role {
+  font-size: 12px;
+  color: var(--ink-secondary);
+  margin-top: 2px;
+}
+.fighter-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.fighter-card.side-b .fighter-meta { justify-content: flex-end; }
+@media (max-width: 800px) {
+  .fighter-card.side-b .fighter-meta { justify-content: flex-start; }
+}
+
+.fighter-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.badge-pink { background: var(--tint-pink); color: var(--rr-pink); }
+.badge-blue { background: var(--tint-blue); color: var(--rr-blue); }
+
+.vs-badge-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+.vs-circle {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 900;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--rr-pink), var(--rr-blue));
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 12px rgba(255, 25, 136, 0.4);
+}
+.vs-diff-text {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  margin-top: 6px;
+  font-family: 'Outfit', sans-serif;
+  white-space: nowrap;
+}
+
+/* Dual Duel Grid */
+.duel-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 20px;
+  align-items: stretch;
+}
+@media (max-width: 960px) {
+  .duel-grid { grid-template-columns: 1fr; }
+}
+
+.radar-wrapper-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+}
+.radar-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.radar-head h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+.radar-canvas-hold {
+  position: relative;
+  width: 100%;
+  height: 320px;
+}
+
+.factor-duel-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.factor-duel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+}
+.factor-duel-head h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+.duel-score-tally {
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  gap: 6px;
+}
+.tally-a { color: var(--rr-pink); }
+.tally-b { color: var(--rr-blue); }
+
+.factor-duel-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.factor-duel-row {
+  display: grid;
+  grid-template-columns: 125px 36px 1fr 36px 60px;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+.duel-lbl {
+  font-weight: 600;
+  color: var(--ink-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.duel-val-a {
+  text-align: right;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  color: var(--rr-pink);
+}
+.duel-val-b {
+  text-align: left;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  color: var(--rr-blue);
+}
+.duel-bar-split {
+  display: flex;
+  height: 7px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+[data-theme="light"] .duel-bar-split { background: rgba(0, 0, 0, 0.08); }
+.duel-bar-fill-a {
+  background: var(--rr-pink);
+  height: 100%;
+  transition: width 0.5s ease;
+}
+.duel-bar-fill-b {
+  background: var(--rr-blue);
+  height: 100%;
+  transition: width 0.5s ease;
+}
+.duel-winner-badge {
+  text-align: right;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+.winner-a { background: var(--tint-pink); color: var(--rr-pink); }
+.winner-b { background: var(--tint-blue); color: var(--rr-blue); }
+.winner-tie { background: rgba(255, 255, 255, 0.08); color: var(--ink-muted); }
+
+.tactical-verdict-card {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 12.5px;
+  color: var(--ink-secondary);
+  line-height: 1.5;
+}
+.tactical-verdict-card b {
+  color: var(--ink-primary);
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* ======================================================== */
+/* PRIORITY 3: COMPLETE METHODOLOGY & DOCUMENTATION         */
+/* ======================================================== */
+.methodology-container {
+  border-top: 3px solid var(--rr-gold);
+}
+
+.method-doc-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.method-doc-header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+.method-doc-header h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ink-primary);
+}
+.method-doc-header p {
+  font-size: 13.5px;
+  color: var(--ink-secondary);
+  margin-top: 4px;
+}
+
+.method-block {
+  margin-bottom: 24px;
+}
+.method-block h4 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.method-block p, .method-block li {
+  font-size: 13.5px;
+  color: var(--ink-secondary);
+  line-height: 1.6;
+}
+.method-block ul, .method-block ol {
+  padding-left: 20px;
+  margin-top: 8px;
+}
+.method-block li {
+  margin-bottom: 6px;
+}
+
+/* Code Formula Box */
+.formula-code-box {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--rr-gold);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-family: 'Fira Code', monospace;
+  font-size: 13px;
+  color: var(--ink-primary);
+  margin: 10px 0;
+  overflow-x: auto;
+}
+
+/* Tables in Methodology */
+.method-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0 16px;
+  font-size: 13px;
+}
+.method-table th {
+  background: rgba(255, 255, 255, 0.04);
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+.method-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--ink-secondary);
+}
+
+.rubric-grid-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 14px 0;
+}
+@media (max-width: 768px) {
+  .rubric-grid-two { grid-template-columns: 1fr; }
+}
+
+/* 7 Factors Detailed Cards */
+.factors-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+.factor-spec-card {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  border-top: 3px solid var(--f-color, var(--rr-pink));
+}
+.factor-spec-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.factor-spec-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink-primary);
+}
+.factor-spec-wt {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--f-color, var(--rr-pink));
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.factor-spec-desc {
+  font-size: 12.5px;
+  color: var(--ink-secondary);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+.factor-spec-why {
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 3px solid var(--f-color, var(--rr-pink));
+  padding: 8px 10px;
+  font-size: 12px;
+  border-radius: 0 6px 6px 0;
+}
+.factor-spec-why b {
+  color: var(--ink-primary);
+}
+
+/* Donut Chart inside Methodology */
+.weights-section-grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 20px;
+  align-items: center;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  margin-top: 12px;
+}
+@media (max-width: 850px) {
+  .weights-section-grid { grid-template-columns: 1fr; }
+}
+
+.donut-canvas-hold {
+  position: relative;
+  width: 100%;
+  height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.donut-center-metric {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+.donut-center-metric .val {
+  font-family: 'Outfit', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--ink-primary);
+  line-height: 1;
+}
+.donut-center-metric .lbl {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 3px;
+}
+
+.factor-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+@media (max-width: 550px) {
+  .factor-chips-grid { grid-template-columns: 1fr; }
+}
+.factor-chip {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.factor-chip:hover {
+  border-color: var(--chip-color, var(--rr-pink));
+  transform: translateY(-1px);
+}
+.factor-chip-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+.factor-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.factor-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.factor-wt {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-secondary);
+}
+
+/* Process & Strategy */
+.pipeline-flow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+.flow-step {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  flex: 1;
+  min-width: 130px;
+  transition: all 0.2s ease;
+}
+.flow-step:hover {
+  border-color: var(--rr-blue);
+  transform: translateY(-2px);
+}
+.flow-step .step-val {
+  font-family: 'Outfit', sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--ink-primary);
+  display: block;
+}
+.flow-step .step-lbl {
+  font-size: 11.5px;
+  color: var(--ink-secondary);
+}
+.flow-arrow {
+  color: var(--ink-muted);
+  font-size: 18px;
+}
+
+.use-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+.use-item {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  transition: all 0.2s ease;
+}
+.use-item:hover {
+  border-color: rgba(37, 99, 235, 0.4);
+  transform: translateY(-2px);
+}
+.use-item-badge {
+  display: inline-block;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--rr-blue);
+  background: var(--tint-blue);
+  padding: 3px 8px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+.use-item p {
+  font-size: 13px;
+  color: var(--ink-secondary);
+  line-height: 1.5;
+}
+
+footer.dash-footer {
+  margin-top: 36px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: var(--ink-muted);
+  font-size: 12.5px;
+}
+
+.svg-defs-hidden {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+</style>
+</head>
+<body>
+
+<!-- Hidden SVG gradients for glowing circular dials -->
+<svg class="svg-defs-hidden">
+  <defs>
+    <linearGradient id="pinkGlowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff1988" />
+      <stop offset="100%" stop-color="#ff7eb9" />
+    </linearGradient>
+    <linearGradient id="blueGlowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#60a5fa" />
+    </linearGradient>
+    <linearGradient id="cyanGlowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#67e8f9" />
+    </linearGradient>
+    <linearGradient id="goldGlowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#fde047" />
+    </linearGradient>
+  </defs>
+</svg>
+
+<div class="dashboard-wrapper">
+  <!-- Top Navigation Header with Priority Anchor Links -->
+  <header class="dash-header">
+    <div>
+      <div class="brand-badge">
+        <span class="dot"></span>
+        Rajasthan Royals Analytics Lab · Official Model
+      </div>
+      <h1>Seven-Factor Player Ranking</h1>
+      <p class="sub-title">T20 & T20I Multi-Factor Algorithmic Evaluation & Scouting System · 2022 to 2026</p>
+    </div>
+
+    <div class="header-actions">
+      <!-- Priority Navigation Jump Tabs -->
+      <nav class="priority-nav-tabs" aria-label="Priority Navigation">
+        <a href="#sectionRankings" class="nav-tab-link p1"><span>🥇</span> 1. Rankings</a>
+        <a href="#sectionComparison" class="nav-tab-link p2"><span>⚔️</span> 2. Comparison</a>
+        <a href="#sectionMethodology" class="nav-tab-link p3"><span>📖</span> 3. Methodology</a>
+      </nav>
+
+      <button class="theme-toggle-btn" id="themeBtn" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
+        🌓
+      </button>
+    </div>
+  </header>
+
+  <!-- Circular KPI Metrics Bar -->
+  <section class="kpi-section">
+    <div class="kpi-card">
+      <div class="kpi-info">
+        <span class="kpi-label">Matches Analysed</span>
+        <span class="kpi-value">865</span>
+        <span class="kpi-sub">Across 4-year cycle</span>
+      </div>
+      <div class="kpi-circle-wrap" title="100% Target Met">
+        <svg class="kpi-circle-svg" viewBox="0 0 52 52">
+          <circle class="kpi-circle-bg" cx="26" cy="26" r="21"></circle>
+          <circle class="kpi-circle-val" cx="26" cy="26" r="21" stroke="url(#blueGlowGrad)" stroke-dasharray="131.9" stroke-dashoffset="0"></circle>
+        </svg>
+        <span class="kpi-circle-text">100%</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-info">
+        <span class="kpi-label">Deliveries Qualified</span>
+        <span class="kpi-value">196,630</span>
+        <span class="kpi-sub">97.8% retention funnel</span>
+      </div>
+      <div class="kpi-circle-wrap" title="97.8% Filter Rate">
+        <svg class="kpi-circle-svg" viewBox="0 0 52 52">
+          <circle class="kpi-circle-bg" cx="26" cy="26" r="21"></circle>
+          <circle class="kpi-circle-val" cx="26" cy="26" r="21" stroke="url(#pinkGlowGrad)" stroke-dasharray="131.9" stroke-dashoffset="2.9"></circle>
+        </svg>
+        <span class="kpi-circle-text">98%</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-info">
+        <span class="kpi-label">Eligible Batters</span>
+        <span class="kpi-value">145</span>
+        <span class="kpi-sub">50.9% of candidate pool</span>
+      </div>
+      <div class="kpi-circle-wrap" title="Batters Share">
+        <svg class="kpi-circle-svg" viewBox="0 0 52 52">
+          <circle class="kpi-circle-bg" cx="26" cy="26" r="21"></circle>
+          <circle class="kpi-circle-val" cx="26" cy="26" r="21" stroke="url(#goldGlowGrad)" stroke-dasharray="131.9" stroke-dashoffset="64.7"></circle>
+        </svg>
+        <span class="kpi-circle-text">51%</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-info">
+        <span class="kpi-label">Eligible Bowlers</span>
+        <span class="kpi-value">140</span>
+        <span class="kpi-sub">49.1% of candidate pool</span>
+      </div>
+      <div class="kpi-circle-wrap" title="Bowlers Share">
+        <svg class="kpi-circle-svg" viewBox="0 0 52 52">
+          <circle class="kpi-circle-bg" cx="26" cy="26" r="21"></circle>
+          <circle class="kpi-circle-val" cx="26" cy="26" r="21" stroke="url(#cyanGlowGrad)" stroke-dasharray="131.9" stroke-dashoffset="67.1"></circle>
+        </svg>
+        <span class="kpi-circle-text">49%</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- 🥇 PRIORITY 1: RANKINGS                                  -->
+  <!-- ======================================================== -->
+  <div class="priority-header-banner" id="sectionRankings">
+    <div class="priority-tag p1">
+      <span class="num-badge">1</span>
+      <span>Priority 1 · Player Rankings & All 10 Contenders</span>
+    </div>
+    <span style="font-size: 12px; color: var(--ink-muted);">Top 10 Batters & Bowlers Evaluation</span>
+  </div>
+
+  <section class="dash-card">
+    <div class="section-head">
+      <div class="section-title">
+        <h2>⭕ All 10 Candidates: Circular Score Matrix</h2>
+        <p>Interactive radial dials displaying the Final Score (0 to 100) for every top 10 player. Click any dial to spotlight & compare.</p>
+      </div>
+
+      <div class="role-tabs" role="tablist">
+        <button id="tb" class="role-tab-btn active" role="tab" aria-selected="true">
+          <span>🏏</span> Top 10 Batters
+        </button>
+        <button id="tw" class="role-tab-btn" role="tab" aria-selected="false">
+          <span>⚡</span> Top 10 Bowlers
+        </button>
+      </div>
+    </div>
+
+    <!-- 10 Circular Gauges Grid -->
+    <div class="all-10-grid" id="all10Grid">
+      <!-- Rendered via JS -->
+    </div>
+
+    <!-- Active Player Spotlight Dossier Card -->
+    <div class="spotlight-dossier" id="activeSpotlightCard">
+      <div class="spotlight-gauge-box">
+        <svg class="spotlight-svg" viewBox="0 0 86 86">
+          <circle cx="43" cy="43" r="35" stroke="rgba(255,255,255,0.08)" stroke-width="7" fill="none"></circle>
+          <circle id="spotlightRing" cx="43" cy="43" r="35" stroke="url(#pinkGlowGrad)" stroke-width="7" stroke-linecap="round" fill="none" stroke-dasharray="219.9" stroke-dashoffset="40" style="transition: stroke-dashoffset 0.8s ease;"></circle>
+        </svg>
+        <div style="position: absolute; display: flex; flex-direction: column; align-items: center;">
+          <span class="spotlight-ring-num" id="spotlightScoreVal">--</span>
+          <span class="spotlight-ring-lbl">SCORE</span>
+        </div>
+      </div>
+
+      <div class="spotlight-main-text">
+        <div class="spotlight-header-row">
+          <span class="spotlight-player-title" id="spotlightPlayerName">Player Name</span>
+          <span class="spotlight-tier-pill" id="spotlightRankBadge">Rank #1</span>
+          <span style="font-size: 12px; color: var(--ink-muted);" id="spotlightMatchCount">55 matches recorded</span>
+        </div>
+        <div class="spotlight-differential" id="spotlightDiffText">Leader differential calculation...</div>
+        <div class="spotlight-intel-box">
+          <span>🔍</span> <span id="spotlightScoutInsight">Analyzing player profile...</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Full Roster Spectrum Table -->
+  <section class="dash-card">
+    <div class="section-head" style="margin-bottom: 12px;">
+      <div class="section-title">
+        <h2>📊 Full Top 10 Roster Spectrum</h2>
+        <p>Complete statistical audit for all ten ranked players. Click any row to load into the comparison engine below.</p>
+      </div>
+    </div>
+
+    <div class="all-10-table-wrapper">
+      <table class="all-10-table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Player</th>
+            <th>Sample</th>
+            <th>Final Score</th>
+            <th>F1 Form (28.5%)</th>
+            <th>F2 Pressure (26.6%)</th>
+            <th>F3 Relative (18.1%)</th>
+            <th>F4 Quality (10.5%)</th>
+            <th>F5 Win Impact (7.6%)</th>
+            <th>Role Profile</th>
+          </tr>
+        </thead>
+        <tbody id="all10TableBody">
+          <!-- Rendered via JS -->
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- ⚔️ PRIORITY 2: COMPARISON                                -->
+  <!-- ======================================================== -->
+  <div class="priority-header-banner" id="sectionComparison">
+    <div class="priority-tag p2">
+      <span class="num-badge">2</span>
+      <span>Priority 2 · Head-to-Head Comparison Arena</span>
+    </div>
+    <span style="font-size: 12px; color: var(--ink-muted);">Compare Any Two Batsmen or Bowlers</span>
+  </div>
+
+  <section class="dash-card comparison-arena">
+    <div class="section-head">
+      <div class="section-title">
+        <h2>⚔️ Head-to-Head Player Comparison Arena</h2>
+        <p>Direct duel engine: Select any two batsmen or any two bowlers to compare their circular dials, radar webs, and factor scores.</p>
+      </div>
+
+      <!-- Role Selector for Comparison -->
+      <div class="role-tabs" role="tablist">
+        <button id="cmpTabBat" class="role-tab-btn active" role="tab" aria-selected="true">
+          <span>🏏</span> Compare Batsmen
+        </button>
+        <button id="cmpTabBowl" class="role-tab-btn" role="tab" aria-selected="false">
+          <span>⚡</span> Compare Bowlers
+        </button>
+      </div>
+    </div>
+
+    <!-- Comparison Control Bar: Player Selectors & Quick Matchups -->
+    <div class="compare-control-bar">
+      <div class="compare-pickers">
+        <div class="picker-box">
+          <span class="picker-lbl a">Player A (Pink)</span>
+          <select id="selectFighterA" class="picker-select"></select>
+        </div>
+
+        <button class="swap-btn" id="btnSwapFighters" title="Swap Player A and B">⇄</button>
+
+        <div class="picker-box">
+          <span class="picker-lbl b">Player B (Blue)</span>
+          <select id="selectFighterB" class="picker-select"></select>
+        </div>
+      </div>
+
+      <!-- Quick Matchup Presets -->
+      <div class="quick-matchups" id="quickMatchupsBox">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+
+    <!-- Side-by-Side Tale of the Tape -->
+    <div class="tale-of-tape">
+      <!-- Player A Card -->
+      <div class="fighter-card side-a" id="fighterCardA">
+        <div class="fighter-gauge">
+          <svg class="fighter-svg" viewBox="0 0 78 78">
+            <circle class="fighter-bg" cx="39" cy="39" r="32"></circle>
+            <circle class="fighter-ring" id="ringFighterA" cx="39" cy="39" r="32" stroke="url(#pinkGlowGrad)" stroke-dasharray="201.1" stroke-dashoffset="35"></circle>
+          </svg>
+          <div class="fighter-gauge-center">
+            <span class="fighter-score-num" id="scoreFighterA">--</span>
+            <span class="fighter-score-lbl">SCORE</span>
+          </div>
+        </div>
+
+        <div class="fighter-info">
+          <div class="fighter-name" id="nameFighterA">Player A</div>
+          <div class="fighter-role" id="roleFighterA">Role Profile</div>
+          <div class="fighter-meta">
+            <span class="fighter-badge badge-pink" id="rankBadgeA">Rank #1</span>
+            <span style="font-size: 11.5px; color: var(--ink-muted);" id="matchesFighterA">-- matches</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center VS Badge with Differential -->
+      <div class="vs-badge-box">
+        <div class="vs-circle">VS</div>
+        <div class="vs-diff-text" id="vsDiffSummary">+0.00 pts</div>
+      </div>
+
+      <!-- Player B Card -->
+      <div class="fighter-card side-b" id="fighterCardB">
+        <div class="fighter-gauge">
+          <svg class="fighter-svg" viewBox="0 0 78 78">
+            <circle class="fighter-bg" cx="39" cy="39" r="32"></circle>
+            <circle class="fighter-ring" id="ringFighterB" cx="39" cy="39" r="32" stroke="url(#blueGlowGrad)" stroke-dasharray="201.1" stroke-dashoffset="40"></circle>
+          </svg>
+          <div class="fighter-gauge-center">
+            <span class="fighter-score-num" id="scoreFighterB">--</span>
+            <span class="fighter-score-lbl">SCORE</span>
+          </div>
+        </div>
+
+        <div class="fighter-info">
+          <div class="fighter-name" id="nameFighterB">Player B</div>
+          <div class="fighter-role" id="roleFighterB">Role Profile</div>
+          <div class="fighter-meta">
+            <span class="fighter-badge badge-blue" id="rankBadgeB">Rank #2</span>
+            <span style="font-size: 11.5px; color: var(--ink-muted);" id="matchesFighterB">-- matches</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dual Breakdown: Overlapping Circular Radar Chart & Factor Duel Rows -->
+    <div class="duel-grid">
+      <!-- Left: Overlapping 7-Factor Radar Web -->
+      <div class="radar-wrapper-box">
+        <div class="radar-head">
+          <h3>🕸️ Overlapping Attribute Radar</h3>
+          <span style="font-size: 11.5px; color: var(--ink-muted);">7 Factors Normalized (0-100)</span>
+        </div>
+        <div class="radar-canvas-hold">
+          <canvas id="duelRadarCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Right: Factor-by-Factor Score Duel -->
+      <div class="factor-duel-box">
+        <div>
+          <div class="factor-duel-head">
+            <h3>⚡ Factor-by-Factor Score Duel</h3>
+            <div class="duel-score-tally" id="duelTallyHeader">
+              <span class="tally-a" id="tallyCountA">0 Wins</span> · <span class="tally-b" id="tallyCountB">0 Wins</span>
+            </div>
+          </div>
+
+          <div class="factor-duel-rows" id="factorDuelRows">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+        <!-- Tactical Verdict Card -->
+        <div class="tactical-verdict-card" id="tacticalVerdictCard">
+          <b>🎯 Scout Analysis:</b>
+          <span id="tacticalVerdictText">Comparing tactical profiles...</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- 📖 PRIORITY 3: COMPLETE METHODOLOGY & DOCUMENTATION      -->
+  <!-- ======================================================== -->
+  <div class="priority-header-banner" id="sectionMethodology">
+    <div class="priority-tag p3">
+      <span class="num-badge">3</span>
+      <span>Priority 3 · Model Specification & Full Methodology</span>
+    </div>
+    <span style="font-size: 12px; color: var(--ink-muted);">Rajasthan Royals Hackathon · Official Technical Document</span>
+  </div>
+
+  <section class="dash-card methodology-container">
+    <div class="method-doc-box">
+      <div class="method-doc-header">
+        <h3>Seven-Factor Player Ranking for Rajasthan Royals</h3>
+        <p>A scouting-support model for T20 and T20I batters and bowlers, built for the RR Hackathon.</p>
+      </div>
+
+      <!-- Part 1: The Short Version -->
+      <div class="method-block">
+        <h4>📋 Part 1: The Short Version</h4>
+        <p><strong>What this is:</strong> A ranking model that scores 145 batters and 140 bowlers on seven factors and combines them into one Final Score from 0 to 100. It is a shortlisting tool for scouts, not an automatic selection list.</p>
+        
+        <table class="method-table" style="max-width: 550px; margin-top: 10px;">
+          <thead>
+            <tr><th>Metric</th><th>Result</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Matches analysed</td><td>865</td></tr>
+            <tr><td>Delivery rows processed</td><td>196,630</td></tr>
+            <tr><td>Eligible batters</td><td>145</td></tr>
+            <tr><td>Eligible bowlers</td><td>140</td></tr>
+            <tr><td>Analysis period</td><td>22 Jan 2022 to 1 Nov 2026</td></tr>
+            <tr><td>Formats</td><td>T20 and T20I</td></tr>
+          </tbody>
+        </table>
+
+        <p style="margin-top: 12px;"><strong>How the Final Score is built:</strong> Every player is turned into a percentile (0 to 100) on each of seven factors. The factors are then blended using fixed weights. In short, <strong>more than half of the score (55.1%) comes from recent consistency (F1) and performance under pressure (F2).</strong></p>
+      </div>
+
+      <!-- Donut Chart & Factor Weights Inside Methodology -->
+      <div class="method-block">
+        <h4>🎯 Model Pipeline & Factor Weights (F1 to F7)</h4>
+        <div class="formula-code-box">
+          Final Score = 0.285 × F1 + 0.266 × F2 + 0.1805 × F3 + 0.1045 × F4 + 0.076 × F5 + 0.038 × F6 + 0.05 × F7
+        </div>
+
+        <div class="weights-section-grid">
+          <div class="donut-canvas-hold">
+            <canvas id="weightsDonutCanvas"></canvas>
+            <div class="donut-center-metric">
+              <div class="val">100%</div>
+              <div class="lbl">7 Factors</div>
+            </div>
+          </div>
+
+          <div class="factor-chips-grid" id="factorChipsGrid">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Part 2: Detailed Version -->
+      <div class="method-block" style="margin-top: 28px;">
+        <h4>🔬 Part 2: The Detailed Version</h4>
+        
+        <h5 style="font-size: 15px; color: var(--ink-primary); margin: 14px 0 6px;">1. Dataset and Analysis Scope</h5>
+        <p>The latest successful pipeline run produced 865 matches and 196,630 delivery rows, covering 145 eligible batters and 140 eligible bowlers between 22 January 2022 and 1 November 2026. Both T20 and T20I formats are included.</p>
+        <p>The uploaded delivery file contained 200,999 rows. The difference of 4,369 rows comes from the competition, date and innings filters. It does not mean all excluded rows were invalid deliveries.</p>
+
+        <h5 style="font-size: 15px; color: var(--ink-primary); margin: 18px 0 6px;">2. Match-Level Scoring: The Foundation</h5>
+        <p>Before any factor is calculated, every player's performance in every match receives a score between 0 and 100. All seven factors build on these match scores. They are analyst-defined scoring rubrics, not official cricket ratings.</p>
+        
+        <div class="rubric-grid-two">
+          <div>
+            <strong style="color: var(--rr-pink);">Batter Match Score Components & Caps:</strong>
+            <table class="method-table">
+              <thead><tr><th>Component</th><th>Weight</th></tr></thead>
+              <tbody>
+                <tr><td>Runs, capped at 60</td><td>35%</td></tr>
+                <tr><td>Strike rate, capped at 200</td><td>25%</td></tr>
+                <tr><td>Boundary-ball percentage, capped at 40%</td><td>20%</td></tr>
+                <tr><td>Dot-ball performance</td><td>20%</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <strong style="color: var(--rr-blue);">Bowler Match Score Components & Caps:</strong>
+            <table class="method-table">
+              <thead><tr><th>Component</th><th>Weight</th></tr></thead>
+              <tbody>
+                <tr><td>Wickets, capped at 4</td><td>30%</td></tr>
+                <tr><td>Economy</td><td>25%</td></tr>
+                <tr><td>Dot-ball percentage</td><td>20%</td></tr>
+                <tr><td>Boundary prevention</td><td>15%</td></tr>
+                <tr><td>Wicket rate</td><td>10%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <p><small style="color: var(--ink-muted);">*The caps stop a single freak innings or spell from dominating a player's record.</small></p>
+
+        <h5 style="font-size: 15px; color: var(--ink-primary); margin: 20px 0 6px;">3. Detailed Formulas for All 7 Factors</h5>
+        <div class="factors-cards-grid">
+          <!-- F1 -->
+          <div class="factor-spec-card" style="--f-color: #ff1988;">
+            <div class="factor-spec-head">
+              <span class="factor-spec-title">F1: Recent Consistency</span>
+              <span class="factor-spec-wt">28.50%</span>
+            </div>
+            <div class="factor-spec-desc">
+              Window: 2 Nov 2025 to 1 Nov 2026. Evaluates scoring &ge;60 in match model (P60), score stability (std dev), and role rates.<br>
+              <code>F1_base = 0.65 × P60 + 0.35 × P_stability</code><br>
+              <strong>Batters:</strong> 0.60×F1_base + 0.20×P_SR + 0.10×P_Boundary + 0.10×P_InvDot<br>
+              <strong>Bowlers:</strong> 0.60×F1_base + 0.20×P_InvEcon + 0.10×P_WktRate + 0.10×P_Dot
+            </div>
+            <div class="factor-spec-why"><b>Why RR uses it:</b> Identifies repeatable output rather than isolated 1-2 freak games.</div>
+          </div>
+
+          <!-- F2 -->
+          <div class="factor-spec-card" style="--f-color: #2563eb;">
+            <div class="factor-spec-head">
+              <span class="factor-spec-title">F2: Pressure & Collapse</span>
+              <span class="factor-spec-wt">26.60%</span>
+            </div>
+            <div class="factor-spec-desc">
+              Collapse: 4+ wickets lost, or &ge;2 wickets lost in previous 18 balls. Pressure: collapse or 2nd innings RRR &ge; 9.<br>
+              <strong>Batters:</strong> 0.50 × P_pressure_SR + 0.50 × P_collapse_SR<br>
+              <strong>Bowlers:</strong> 0.35×P_InvPressEcon + 0.25×P_PressWkt + 0.25×P_InvCollEcon + 0.15×P_CollWkt
+            </div>
+            <div class="factor-spec-why"><b>Why RR uses it:</b> Pinpoints clutch players who rescue collapsed innings or defend under pressure.</div>
+          </div>
+
+          <!-- F3 -->
+          <div class="factor-spec-card" style="--f-color: #8b5cf6;">
+            <div class="factor-spec-head">
+              <span class="factor-spec-title">F3: Match Participant Comparison</span>
+              <span class="factor-spec-wt">18.05%</span>
+            </div>
+            <div class="factor-spec-desc">
+              Judges performance relative to all 22 players in the exact same match conditions.<br>
+              <code>Rank score = 100 × (1 - (Rank - 1) / 21)</code><br>
+              Combines 60% within-match rank score and 40% proportion of performances beating the match mean.
+            </div>
+            <div class="factor-spec-why"><b>Why RR uses it:</b> Normalizes tough pitches (e.g. low-scoring turners or highway tracks).</div>
+          </div>
+
+          <!-- F4 -->
+          <div class="factor-spec-card" style="--f-color: #10b981;">
+            <div class="factor-spec-head">
+              <span class="factor-spec-title">F4: Opposition Strength</span>
+              <span class="factor-spec-wt">10.45%</span>
+            </div>
+            <div class="factor-spec-desc">
+              Batters are judged against opposing bowling unit quality; bowlers against opposing batting unit quality. Only strictly earlier match dates are used (no future leakage).
+            </div>
+            <div class="factor-spec-why"><b>Why RR uses it:</b> Discounts padded stats recorded against weaker tier/associate attacks.</div>
+          </div>
+
+          <!-- F5 -->
+          <div class="factor-spec-card" style="--f-color: #f59e0b;">
+            <div class="factor-spec-head">
+              <span class="factor-spec-title">F5: Match-Winning Contribution</span>
+              <span class="factor-spec-wt">7.60%</span>
+            </div>
+            <div class="factor-spec-desc">
+              <code>F5_raw = mean score in wins - mean score in losses</code><br>
+              Converted into a percentile. Players with 0 wins or 0 losses receive a neutral 50.
+            </div>
+            <div class="factor-spec-why"><b>Why RR uses it:</b> Identifies correlation between individual output and victory margin.</div>
+          </div>
+
+          <!-- F6 -->
+          <div class="factor-spec-card" style="--f-color: #ec4899;">
+            <div class="factor-spec-head">
+              <span class="factor-spec-title">F6: Historical Performance</span>
+              <span class="factor-spec-wt">3.80%</span>
+            </div>
+            <div class="factor-spec-desc">
+              Covers 22 Jan 2022 to 1 Nov 2025. Player's mean match score over the historical window converted into a percentile.
+            </div>
+            <div class="factor-spec-why"><b>Why RR uses it:</b> Retains long-term track record without drowning recent form.</div>
+          </div>
+
+          <!-- F7 -->
+          <div class="factor-spec-card" style="--f-color: #06b6d4;">
+            <div class="factor-spec-head">
+              <span class="factor-spec-title">F7: De-overlapped Overall Performance</span>
+              <span class="factor-spec-wt">5.00%</span>
+            </div>
+            <div class="factor-spec-desc">
+              Residualized via OLS Regression to eliminate multicollinearity:<br>
+              <code>F7_base = b0 + b1×F2 + b2×F3 + b3×F6 + error</code><br>
+              The residual errors are percentile-ranked, isolating purely orthogonal overall quality.
+            </div>
+            <div class="factor-spec-why"><b>Why RR uses it:</b> Prevents double-counting traits already rewarded in F2, F3, and F6.</div>
+          </div>
+        </div>
+
+        <h5 style="font-size: 15px; color: var(--ink-primary); margin: 24px 0 6px;">4. From Raw Ball-by-Ball to Shortlist (Pipeline)</h5>
+        <div class="pipeline-flow">
+          <div class="flow-step"><span class="step-val">200,999</span><span class="step-lbl">Raw deliveries</span></div>
+          <span class="flow-arrow">➔</span>
+          <div class="flow-step"><span class="step-val">196,630</span><span class="step-lbl">Deliveries qualified</span></div>
+          <span class="flow-arrow">➔</span>
+          <div class="flow-step"><span class="step-val">0 to 100</span><span class="step-lbl">Match rubrics</span></div>
+          <span class="flow-arrow">➔</span>
+          <div class="flow-step"><span class="step-val">7 Factors</span><span class="step-lbl">Percentiles (F1-F7)</span></div>
+          <span class="flow-arrow">➔</span>
+          <div class="flow-step"><span class="step-val">1 Score</span><span class="step-lbl">Weighted blend</span></div>
+          <span class="flow-arrow">➔</span>
+          <div class="flow-step" style="border-color: var(--rr-pink); background: var(--tint-pink);"><span class="step-val" style="color: var(--rr-pink);">Shortlist</span><span class="step-lbl">Scout Dossier</span></div>
+        </div>
+
+        <h5 style="font-size: 15px; color: var(--ink-primary); margin: 24px 0 6px;">5. How Rajasthan Royals Can Use the Results</h5>
+        <div class="use-grid">
+          <div class="use-item"><span class="use-item-badge">1. Shortlisting</span><p>Find undervalued players across global leagues worth deeper video & live scouting.</p></div>
+          <div class="use-item"><span class="use-item-badge">2. Recent Form (F1)</span><p>Check 12-month rolling repeatability of performance before committing funds.</p></div>
+          <div class="use-item"><span class="use-item-badge">3. Pressure (F2)</span><p>Review player poise in top-order collapses and demanding second-innings chases.</p></div>
+          <div class="use-item"><span class="use-item-badge">4. Opposition Context (F4)</span><p>Understand the caliber of attacks faced to prevent inflation from secondary leagues.</p></div>
+          <div class="use-item"><span class="use-item-badge">5. Winning Impact (F5)</span><p>Compare performance in wins vs losses (association indicator, not causal proof).</p></div>
+          <div class="use-item"><span class="use-item-badge">6. Role Segmentation</span><p>Filter candidates by batting entry point (PP, Middle, Death) or bowling phase.</p></div>
+          <div class="use-item"><span class="use-item-badge">7. Auction Strategy</span><p>Blend ranking output with price valuation, overseas slot limits, and squad balance.</p></div>
+        </div>
+
+        <h5 style="font-size: 15px; color: var(--ink-primary); margin: 24px 0 6px;">6. Critical Governance & Model Limitations</h5>
+        <ul style="padding-left: 20px; font-size: 13.5px; color: var(--ink-secondary); line-height: 1.6;">
+          <li><strong>Analyst-Defined Rubrics:</strong> Match scores are proprietary rubrics tailored for T20 impact, not official ICC ratings.</li>
+          <li><strong>Sample Size Caveats:</strong> Players with few matches can receive extreme percentile scores (e.g. Maaz Sadaqat's 8 matches vs Harry Brook's 55 matches). A high Final Score is a reason to scout a player, not to buy one.</li>
+          <li><strong>Correlation vs Causation:</strong> F5 reflects statistical association with team victories, not definitive proof of individual cause.</li>
+          <li><strong>External Factors:</strong> Player auction valuation, injury history, visa availability, and team chemistry sit outside the mathematical model.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="dash-footer">
+    <div>
+      Match scores are analyst-defined algorithmic rubrics, not official ICC ratings. Small match samples require qualitative scouting confirmation.
+    </div>
+    <div>
+      Rajasthan Royals Performance Analytics Framework · 2026 Edition
+    </div>
+  </footer>
+</div>
+
+<script>
+// --- DATA DEFINITION ---
+var FACTORS = [
+  { id: "F1", name: "F1 Recent Consistency", desc: "Repeatable form, last 12 months", weight: 28.5, color: "#ff1988" },
+  { id: "F2", name: "F2 Pressure & Collapse", desc: "Performance when team is in trouble", weight: 26.6, color: "#2563eb" },
+  { id: "F3", name: "F3 Match Comparison", desc: "Rank against others in same match", weight: 18.05, color: "#8b5cf6" },
+  { id: "F4", name: "F4 Opposition Strength", desc: "Quality of opponents faced", weight: 10.45, color: "#10b981" },
+  { id: "F5", name: "F5 Match-Winning Contribution", desc: "Scores in wins versus losses", weight: 7.6, color: "#f59e0b" },
+  { id: "F7", name: "F7 Overall, De-overlapped", desc: "Overall quality without double counting", weight: 5.0, color: "#06b6d4" },
+  { id: "F6", name: "F6 Historical Performance", desc: "Jan 2022 to Nov 2025 record", weight: 3.8, color: "#ec4899" }
+];
+
+var DATA = {
+  bat: [
+    { rank: 1, name: "Maaz Sadaqat", score: 82.90, matches: 8, role: "Top-Order / Anchor", caution: true, note: "Only 8 matches in model (F2 and F5 at 100). Extreme small sample caution; prioritize live scouting.", factors: [72, 100, 88, 68, 100, 74, 60] },
+    { rank: 2, name: "Harry Brook", score: 81.37, matches: 55, role: "Middle-Order Enforcer", caution: false, note: "55 matches with elite F1 consistency and F7 scores. Proven world-class volume performer.", factors: [95, 84, 82, 86, 70, 93, 78] },
+    { rank: 3, name: "Finn Allen", score: 75.93, matches: 42, role: "Powerplay Opener", caution: false, note: "High boundary strike rate in overs 1-6; elite positive match delta when setting totals.", factors: [82, 74, 86, 76, 68, 78, 65] },
+    { rank: 4, name: "Daryl Mitchell", score: 75.82, matches: 48, role: "Middle-Overs Anchor", caution: false, note: "Exceptional spin handling and high pressure absorption in middle overs (overs 7-15).", factors: [80, 88, 72, 78, 74, 75, 72] },
+    { rank: 5, name: "Vaibhav Sooryavanshi", score: 75.78, matches: 14, role: "Aggressive Opener", caution: true, note: "Prodigious 14-match ceiling; fearless intent against pacers in domestic T20s.", factors: [78, 76, 84, 70, 80, 76, 64] },
+    { rank: 6, name: "Abhishek Sharma", score: 75.30, matches: 46, role: "Powerplay Striker", caution: false, note: "Elite intent in powerplay with strong positive match delta; devastating against spin.", factors: [88, 68, 83, 74, 76, 82, 68] },
+    { rank: 7, name: "Ashutosh Sharma", score: 74.11, matches: 22, role: "Death-Overs Finisher", caution: false, note: "Specialist death overs (16-20) finisher with clutch execution in tight chases.", factors: [76, 91, 75, 72, 78, 70, 58] },
+    { rank: 8, name: "Heinrich Klaasen", score: 73.47, matches: 52, role: "Middle-Order Destroyer", caution: false, note: "Premier middle-overs spin crusher; unmatched six-hitting percentage against slow bowling.", factors: [79, 82, 80, 84, 65, 77, 74] },
+    { rank: 9, name: "Jos Buttler", score: 72.93, matches: 58, role: "Elite Opener / WK", caution: false, note: "Proven match-winner with highest opposition quality index (F4) in the entire candidate pool.", factors: [74, 80, 78, 85, 71, 79, 76] },
+    { rank: 10, name: "Tim David", score: 72.27, matches: 50, role: "Finisher / Power Hitter", caution: false, note: "Specialist death boundary hitter with top percentile win-contribution in last 3 overs.", factors: [75, 79, 74, 75, 73, 72, 70] }
+  ],
+  bowl: [
+    { rank: 1, name: "Benjamin Sears", score: 78.55, matches: 24, role: "Express Pace Enforcer", caution: false, note: "Express 145k+ pace and steep bounce in middle/death overs; high dot-ball consistency.", factors: [86, 82, 80, 75, 78, 80, 68] },
+    { rank: 2, name: "Gerald Coetzee", score: 76.86, matches: 32, role: "Strike Fast Bowler", caution: false, note: "High breakthrough rate in pressure situations; attacks stumps when team is under pump.", factors: [84, 85, 78, 76, 72, 79, 70] },
+    { rank: 3, name: "Sufiyan Muqeem", score: 75.49, matches: 18, role: "Left-Arm Wrist Spinner", caution: false, note: "Deceptive wrong-un and angle; high dot-ball percentage against right-hand top orders.", factors: [80, 83, 79, 72, 76, 75, 62] },
+    { rank: 4, name: "Matthew Humphreys", score: 75.23, matches: 16, role: "Slow Left-Arm Orthodox", caution: true, note: "Pinpoint control in powerplay overs and disciplined run containment.", factors: [79, 81, 77, 71, 80, 74, 60] },
+    { rank: 5, name: "Mohammad Nawaz", score: 73.62, matches: 45, role: "All-Phase Finger Spin", caution: false, note: "Reliable tactical matchup utility and defensive containment across all 3 phases.", factors: [76, 78, 76, 78, 74, 75, 72] },
+    { rank: 6, name: "Sunil Narine", score: 73.34, matches: 54, role: "Mystery Spin Benchmark", caution: false, note: "World-class economy rating against top-tier international and franchise lineups.", factors: [82, 76, 84, 82, 68, 78, 76] },
+    { rank: 7, name: "Lungi Ngidi", score: 71.86, matches: 38, role: "Seam / Slower Ball Expert", caution: false, note: "Deceptive cutters and heavy lengths; steady wicket-taking strike rate in overs 18-20.", factors: [74, 77, 73, 76, 72, 74, 70] },
+    { rank: 8, name: "Abrar Ahmed", score: 71.76, matches: 26, role: "Mystery Leg-Spinner", caution: false, note: "Deceptive carrom ball variations that strangle run flow in the middle overs.", factors: [77, 75, 74, 73, 70, 73, 65] },
+    { rank: 9, name: "Rakibul Hasan", score: 70.88, matches: 22, role: "Orthodox Containment", caution: false, note: "Disciplined wicket-to-wicket lines in dry and turning subcontinental conditions.", factors: [75, 73, 72, 70, 75, 71, 66] },
+    { rank: 10, name: "Mahedi Hasan", score: 70.64, matches: 36, role: "Powerplay Off-Spinner", caution: false, note: "Powerplay specialist off-spinner with proven economy against explosive left-handers.", factors: [74, 72, 73, 72, 72, 70, 68] }
+  ]
+};
+
+var ROSTER_COLORS = [
+  "#ff1988", "#2563eb", "#8b5cf6", "#10b981", "#f59e0b",
+  "#06b6d4", "#ec4899", "#6366f1", "#14b8a6", "#eab308"
+];
+
+// Presets for quick comparisons
+var PRESETS = {
+  bat: [
+    { label: "Top 2 Clash (#1 vs #2)", a: 0, b: 1 },
+    { label: "Enforcer vs Destroyer (#2 vs #8)", a: 1, b: 7 },
+    { label: "Powerplay Strikers (#3 vs #6)", a: 2, b: 5 },
+    { label: "Clutch Finishers (#7 vs #10)", a: 6, b: 9 }
+  ],
+  bowl: [
+    { label: "Express Pace Duel (#1 vs #2)", a: 0, b: 1 },
+    { label: "Mystery Spinners (#3 vs #6)", a: 2, b: 5 },
+    { label: "Finger Spin Control (#4 vs #5)", a: 3, b: 4 },
+    { label: "Subcontinent Containment (#8 vs #10)", a: 7, b: 9 }
+  ]
+};
+
+// Global App State
+var currentRole = "bat";
+var activeRankIndex = 0;
+var fighterAIndex = 0;
+var fighterBIndex = 1;
+
+var donutChart = null;
+var duelRadarChart = null;
+
+function isDark() {
+  return document.documentElement.getAttribute("data-theme") !== "light";
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, function(c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+// 1. Initialise the Factor Weights Donut (Methodology)
+function initWeightsDonut() {
+  var ctx = document.getElementById("weightsDonutCanvas").getContext("2d");
+  var labels = FACTORS.map(function(f) { return f.name; });
+  var weights = FACTORS.map(function(f) { return f.weight; });
+  var colors = FACTORS.map(function(f) { return f.color; });
+
+  donutChart = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: labels,
+      datasets: [{
+        data: weights,
+        backgroundColor: colors,
+        borderWidth: 2,
+        borderColor: isDark() ? "#111628" : "#ffffff",
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "68%",
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: isDark() ? "rgba(17, 22, 40, 0.95)" : "rgba(255, 255, 255, 0.95)",
+          titleColor: isDark() ? "#f8fafc" : "#0f172a",
+          bodyColor: isDark() ? "#94a3b8" : "#475569",
+          borderColor: "rgba(255, 25, 136, 0.3)",
+          borderWidth: 1,
+          padding: 10,
+          callbacks: {
+            label: function(item) {
+              var f = FACTORS[item.dataIndex];
+              return " " + f.name + ": " + f.weight + "% (" + f.desc + ")";
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Render Factor Chips
+  var chipBox = document.getElementById("factorChipsGrid");
+  chipBox.innerHTML = FACTORS.map(function(f, i) {
+    return '<div class="factor-chip" style="--chip-color: ' + f.color + '" onclick="highlightWeightSlice(' + i + ')">' +
+      '<div class="factor-chip-left">' +
+        '<span class="factor-dot" style="background:' + f.color + '"></span>' +
+        '<span class="factor-name" title="' + esc(f.desc) + '">' + esc(f.name) + '</span>' +
+      '</div>' +
+      '<span class="factor-wt">' + f.weight + '%</span>' +
+    '</div>';
+  }).join("");
+}
+
+function highlightWeightSlice(idx) {
+  if (!donutChart) return;
+  donutChart.setActiveElements([{ datasetIndex: 0, index: idx }]);
+  donutChart.tooltip.setActiveElements([{ datasetIndex: 0, index: idx }]);
+  donutChart.update();
+}
+
+// 2. PRIORITY 1: ALL 10 CIRCULAR DIALS MATRIX & SPOTLIGHT
+function renderAll10Grid() {
+  var list = DATA[currentRole];
+  var grid = document.getElementById("all10Grid");
+  var html = "";
+
+  list.forEach(function(player, idx) {
+    var tierClass = idx === 0 ? "gold-tier" : (idx === 1 ? "silver-tier" : (idx === 2 ? "bronze-tier" : ""));
+    var isFocused = idx === activeRankIndex;
+    
+    var circum = 188.5; // 2 * PI * 30
+    var pct = player.score / 100;
+    var offset = circum - (pct * circum);
+    var strokeColor = ROSTER_COLORS[idx % ROSTER_COLORS.length];
+
+    html += '<div class="player-dial-card ' + tierClass + (isFocused ? ' selected-for-compare' : '') + '" data-idx="' + idx + '" title="Click to spotlight">' +
+      '<div class="dial-rank-tag">#' + player.rank + '</div>' +
+      (player.caution 
+        ? '<div class="dial-sample-badge caution" title="Small sample (' + player.matches + ' matches)">⚠️ ' + player.matches + 'm</div>'
+        : '<div class="dial-sample-badge" title="High volume sample">' + player.matches + 'm</div>') +
+      '<div class="dial-circle-wrap">' +
+        '<svg class="dial-circle-svg" viewBox="0 0 76 76">' +
+          '<circle class="dial-circle-bg" cx="38" cy="38" r="30"></circle>' +
+          '<circle class="dial-circle-bar" cx="38" cy="38" r="30" stroke="' + strokeColor + '" stroke-dasharray="' + circum + '" stroke-dashoffset="' + offset + '"></circle>' +
+        '</svg>' +
+        '<div class="dial-circle-center">' +
+          '<span class="dial-circle-score">' + player.score.toFixed(1) + '</span>' +
+          '<span class="dial-circle-pct">SCORE</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="dial-player-name" title="' + esc(player.name) + '">' + esc(player.name) + '</div>' +
+      '<div class="dial-player-role">' + esc(player.role) + '</div>' +
+      '<div class="dial-key-factors">' +
+        '<span class="dial-mini-tag">F1: ' + player.factors[0] + '</span>' +
+        '<span class="dial-mini-tag" style="background: var(--tint-pink); color: var(--rr-pink)">F2: ' + player.factors[1] + '</span>' +
+      '</div>' +
+    '</div>';
+  });
+
+  grid.innerHTML = html;
+  updateSpotlightDossier();
+  renderAll10Table();
+}
+
+function updateSpotlightDossier() {
+  var list = DATA[currentRole];
+  var player = list[activeRankIndex];
+  if (!player) return;
+
+  var topScore = list[0].score;
+  var diffText = "";
+  if (activeRankIndex === 0) {
+    var lead = (topScore - list[1].score).toFixed(2);
+    diffText = "Leading contender: Holds <strong>+" + lead + " points advantage</strong> over #2 " + esc(list[1].name) + ".";
+  } else {
+    var behind = (topScore - player.score).toFixed(2);
+    diffText = "Rank #" + player.rank + ": Trailing leader " + esc(list[0].name) + " by <strong>-" + behind + " points</strong>.";
+  }
+
+  document.getElementById("spotlightPlayerName").textContent = player.name;
+  document.getElementById("spotlightRankBadge").textContent = "Rank #" + player.rank + " " + (currentRole === "bat" ? "Batter" : "Bowler");
+  document.getElementById("spotlightMatchCount").textContent = player.matches + " matches recorded" + (player.caution ? " (Small sample alert)" : "");
+  document.getElementById("spotlightScoreVal").textContent = player.score.toFixed(2);
+  document.getElementById("spotlightDiffText").innerHTML = diffText;
+  document.getElementById("spotlightScoutInsight").textContent = player.note;
+
+  // Animate Circular Ring (r=35, circumference = 219.9)
+  var circum = 219.9;
+  var pct = player.score / 100;
+  var offset = circum - (pct * circum);
+  var ring = document.getElementById("spotlightRing");
+  if (ring) {
+    ring.style.strokeDashoffset = offset;
+    ring.setAttribute("stroke", ROSTER_COLORS[activeRankIndex % ROSTER_COLORS.length]);
+  }
+}
+
+function renderAll10Table() {
+  var list = DATA[currentRole];
+  var tbody = document.getElementById("all10TableBody");
+  var html = "";
+
+  list.forEach(function(player, idx) {
+    var circum = 75.4; // 2 * PI * 12
+    var pct = player.score / 100;
+    var offset = circum - (pct * circum);
+    var strokeColor = ROSTER_COLORS[idx % ROSTER_COLORS.length];
+
+    html += '<tr data-idx="' + idx + '" title="Click to spotlight & compare">' +
+      '<td><strong style="color: var(--ink-primary)">#' + player.rank + '</strong></td>' +
+      '<td>' +
+        '<div class="table-player-cell">' +
+          '<div class="table-mini-circle">' +
+            '<svg viewBox="0 0 32 32">' +
+              '<circle cx="16" cy="16" r="12" stroke="rgba(255,255,255,0.08)" stroke-width="3" fill="none"></circle>' +
+              '<circle cx="16" cy="16" r="12" stroke="' + strokeColor + '" stroke-width="3" stroke-linecap="round" fill="none" stroke-dasharray="' + circum + '" stroke-dashoffset="' + offset + '"></circle>' +
+            '</svg>' +
+          '</div>' +
+          '<div>' +
+            '<div>' + esc(player.name) + '</div>' +
+            '<small style="color: var(--ink-muted); font-size: 11px;">' + esc(player.role) + '</small>' +
+          '</div>' +
+        '</div>' +
+      '</td>' +
+      '<td>' + (player.caution ? '<span style="color:#fbbf24; font-weight:600">⚠️ ' + player.matches + 'm</span>' : player.matches + 'm') + '</td>' +
+      '<td><span class="table-score-val">' + player.score.toFixed(2) + '</span></td>' +
+      '<td>' + player.factors[0] + '</td>' +
+      '<td>' + player.factors[1] + '</td>' +
+      '<td>' + player.factors[2] + '</td>' +
+      '<td>' + player.factors[3] + '</td>' +
+      '<td>' + player.factors[4] + '</td>' +
+      '<td><span style="font-size: 11.5px; color: var(--ink-secondary)">' + esc(player.role) + '</span></td>' +
+    '</tr>';
+  });
+
+  tbody.innerHTML = html;
+}
+
+// 3. PRIORITY 2: HEAD-TO-HEAD COMPARISON ENGINE
+function populateFighterSelects() {
+  var list = DATA[currentRole];
+  var selA = document.getElementById("selectFighterA");
+  var selB = document.getElementById("selectFighterB");
+
+  var opts = list.map(function(p, i) {
+    return '<option value="' + i + '">#' + p.rank + ' ' + esc(p.name) + ' (' + p.score.toFixed(1) + ' pts)</option>';
+  }).join("");
+
+  selA.innerHTML = opts;
+  selB.innerHTML = opts;
+
+  selA.value = fighterAIndex;
+  selB.value = fighterBIndex;
+
+  // Render Preset Matchup buttons
+  var presets = PRESETS[currentRole] || [];
+  var presetBox = document.getElementById("quickMatchupsBox");
+  presetBox.innerHTML = presets.map(function(pr, i) {
+    return '<button class="quick-matchup-pill" data-a="' + pr.a + '" data-b="' + pr.b + '">' + esc(pr.label) + '</button>';
+  }).join("");
+}
+
+function updateComparisonArena() {
+  var list = DATA[currentRole];
+  var pA = list[fighterAIndex];
+  var pB = list[fighterBIndex];
+  if (!pA || !pB) return;
+
+  // Update Player A Card
+  document.getElementById("nameFighterA").textContent = pA.name;
+  document.getElementById("roleFighterA").textContent = pA.role;
+  document.getElementById("scoreFighterA").textContent = pA.score.toFixed(1);
+  document.getElementById("rankBadgeA").textContent = "Rank #" + pA.rank + " " + (currentRole === "bat" ? "Batter" : "Bowler");
+  document.getElementById("matchesFighterA").textContent = pA.matches + " matches recorded" + (pA.caution ? " (Small sample)" : "");
+
+  var circumA = 201.06; // 2 * PI * 32
+  var pctA = pA.score / 100;
+  var offsetA = circumA - (pctA * circumA);
+  document.getElementById("ringFighterA").style.strokeDashoffset = offsetA;
+
+  // Update Player B Card
+  document.getElementById("nameFighterB").textContent = pB.name;
+  document.getElementById("roleFighterB").textContent = pB.role;
+  document.getElementById("scoreFighterB").textContent = pB.score.toFixed(1);
+  document.getElementById("rankBadgeB").textContent = "Rank #" + pB.rank + " " + (currentRole === "bat" ? "Batter" : "Bowler");
+  document.getElementById("matchesFighterB").textContent = pB.matches + " matches recorded" + (pB.caution ? " (Small sample)" : "");
+
+  var circumB = 201.06;
+  var pctB = pB.score / 100;
+  var offsetB = circumB - (pctB * circumB);
+  document.getElementById("ringFighterB").style.strokeDashoffset = offsetB;
+
+  // Score Differential
+  var diff = (pA.score - pB.score).toFixed(2);
+  var diffSummary = document.getElementById("vsDiffSummary");
+  if (Math.abs(diff) < 0.01) {
+    diffSummary.textContent = "Tied Score";
+  } else if (diff > 0) {
+    diffSummary.innerHTML = '<span style="color:var(--rr-pink)">▲ ' + pA.name.split(" ")[0] + ' +' + diff + ' pts</span>';
+  } else {
+    diffSummary.innerHTML = '<span style="color:var(--rr-blue)">▲ ' + pB.name.split(" ")[0] + ' +' + Math.abs(diff).toFixed(2) + ' pts</span>';
+  }
+
+  // Update Factor Duel Rows
+  var winsA = 0;
+  var winsB = 0;
+  var duelRowsHtml = "";
+
+  FACTORS.forEach(function(factor, fIdx) {
+    var valA = pA.factors[fIdx];
+    var valB = pB.factors[fIdx];
+    var totalVal = valA + valB;
+    var pctWidthA = totalVal > 0 ? (valA / totalVal) * 100 : 50;
+    var pctWidthB = 100 - pctWidthA;
+
+    var winnerBadge = "";
+    if (valA > valB) {
+      winsA++;
+      winnerBadge = '<span class="duel-winner-badge winner-a">+' + (valA - valB) + ' ' + pA.name.split(" ")[0] + '</span>';
+    } else if (valB > valA) {
+      winsB++;
+      winnerBadge = '<span class="duel-winner-badge winner-b">+' + (valB - valA) + ' ' + pB.name.split(" ")[0] + '</span>';
+    } else {
+      winnerBadge = '<span class="duel-winner-badge winner-tie">TIE</span>';
+    }
+
+    duelRowsHtml += '<div class="factor-duel-row">' +
+      '<span class="duel-lbl" title="' + esc(factor.desc) + '">' + factor.id + ' ' + esc(factor.name.split(" ")[1] || factor.name) + '</span>' +
+      '<span class="duel-val-a">' + valA + '</span>' +
+      '<div class="duel-bar-split">' +
+        '<div class="duel-bar-fill-a" style="width:' + pctWidthA + '%"></div>' +
+        '<div class="duel-bar-fill-b" style="width:' + pctWidthB + '%"></div>' +
+      '</div>' +
+      '<span class="duel-val-b">' + valB + '</span>' +
+      winnerBadge +
+    '</div>';
+  });
+
+  document.getElementById("factorDuelRows").innerHTML = duelRowsHtml;
+  document.getElementById("tallyCountA").textContent = pA.name.split(" ")[0] + ": " + winsA + " Wins";
+  document.getElementById("tallyCountB").textContent = pB.name.split(" ")[0] + ": " + winsB + " Wins";
+
+  // Qualitative Tactical Verdict
+  var verdictText = "";
+  if (pA.caution && !pB.caution) {
+    verdictText = "<strong>Sample Size Discrepancy:</strong> " + pA.name + " leads in composite score, but is built on only " + pA.matches + " matches. " + pB.name + " brings battle-tested volume across " + pB.matches + " matches with established repeatability (" + winsB + " factor wins).";
+  } else if (!pA.caution && pB.caution) {
+    verdictText = "<strong>Volume Advantage:</strong> " + pA.name + " (" + pA.matches + " matches) provides far higher statistical confidence than " + pB.name + " (" + pB.matches + " matches). " + pA.name + " holds the reliability edge for auction commitment.";
+  } else {
+    var leader = winsA > winsB ? pA.name : (winsB > winsA ? pB.name : "Both athletes");
+    verdictText = "<strong>Direct Factor Duel:</strong> " + leader + " controls the head-to-head tactical edge (" + Math.max(winsA, winsB) + " of 7 factors). " + pA.name + " offers specialty in " + pA.role + ", whereas " + pB.name + " commands " + pB.role + ".";
+  }
+  document.getElementById("tacticalVerdictText").innerHTML = verdictText;
+
+  // Render / Update the Dual Radar Chart
+  renderDuelRadarChart(pA, pB);
+}
+
+function renderDuelRadarChart(pA, pB) {
+  var ctx = document.getElementById("duelRadarCanvas").getContext("2d");
+  var dark = isDark();
+
+  if (duelRadarChart) {
+    duelRadarChart.destroy();
+  }
+
+  duelRadarChart = new Chart(ctx, {
+    type: "radar",
+    data: {
+      labels: ["F1 Form", "F2 Pressure", "F3 Relative", "F4 Opponent", "F5 Win Delta", "F7 Overall", "F6 History"],
+      datasets: [
+        {
+          label: "#" + pA.rank + " " + pA.name + " (" + pA.score.toFixed(1) + ")",
+          data: pA.factors,
+          backgroundColor: "rgba(255, 25, 136, 0.28)",
+          borderColor: "#ff1988",
+          borderWidth: 2.5,
+          pointBackgroundColor: "#ff1988",
+          pointRadius: 4,
+          pointHoverRadius: 6
+        },
+        {
+          label: "#" + pB.rank + " " + pB.name + " (" + pB.score.toFixed(1) + ")",
+          data: pB.factors,
+          backgroundColor: "rgba(37, 99, 235, 0.28)",
+          borderColor: "#2563eb",
+          borderWidth: 2.5,
+          pointBackgroundColor: "#2563eb",
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        r: {
+          angleLines: { color: dark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.08)" },
+          grid: {
+            circular: true,
+            color: dark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.06)"
+          },
+          pointLabels: {
+            color: dark ? "#94a3b8" : "#475569",
+            font: { family: "Plus Jakarta Sans", size: 11, weight: "600" }
+          },
+          ticks: { display: false, backdropColor: "transparent" },
+          suggestedMin: 50,
+          suggestedMax: 100
+        }
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: "bottom",
+          labels: {
+            color: dark ? "#cbd5e1" : "#334155",
+            font: { family: "Plus Jakarta Sans", size: 12, weight: "600" },
+            boxWidth: 12,
+            padding: 10
+          }
+        },
+        tooltip: {
+          backgroundColor: dark ? "rgba(17, 22, 40, 0.95)" : "rgba(255, 255, 255, 0.95)",
+          titleColor: dark ? "#f8fafc" : "#0f172a",
+          bodyColor: dark ? "#94a3b8" : "#475569",
+          borderColor: "rgba(255, 25, 136, 0.3)",
+          borderWidth: 1,
+          padding: 10
+        }
+      }
+    }
+  });
+}
+
+// 4. EVENT LISTENERS
+// Role switcher in Rankings (Priority 1)
+document.getElementById("tb").addEventListener("click", function() {
+  if (currentRole === "bat") return;
+  setCategory("bat");
+});
+document.getElementById("tw").addEventListener("click", function() {
+  if (currentRole === "bowl") return;
+  setCategory("bowl");
+});
+
+// Role switcher in Comparison (Priority 2)
+document.getElementById("cmpTabBat").addEventListener("click", function() {
+  if (currentRole === "bat") return;
+  setCategory("bat");
+});
+document.getElementById("cmpTabBowl").addEventListener("click", function() {
+  if (currentRole === "bowl") return;
+  setCategory("bowl");
+});
+
+function setCategory(cat) {
+  currentRole = cat;
+  activeRankIndex = 0;
+  fighterAIndex = 0;
+  fighterBIndex = 1;
+
+  document.getElementById("tb").classList.toggle("active", cat === "bat");
+  document.getElementById("tb").setAttribute("aria-selected", cat === "bat");
+  document.getElementById("tw").classList.toggle("active", cat === "bowl");
+  document.getElementById("tw").setAttribute("aria-selected", cat === "bowl");
+
+  document.getElementById("cmpTabBat").classList.toggle("active", cat === "bat");
+  document.getElementById("cmpTabBat").setAttribute("aria-selected", cat === "bat");
+  document.getElementById("cmpTabBowl").classList.toggle("active", cat === "bowl");
+  document.getElementById("cmpTabBowl").setAttribute("aria-selected", cat === "bowl");
+
+  renderAll10Grid();
+  populateFighterSelects();
+  updateComparisonArena();
+}
+
+// Clicking any dial in All 10 Grid spotlights the player and loads into comparison
+document.getElementById("all10Grid").addEventListener("click", function(e) {
+  var card = e.target.closest(".player-dial-card");
+  if (!card) return;
+  var idx = parseInt(card.getAttribute("data-idx"), 10);
+  if (!isNaN(idx)) {
+    activeRankIndex = idx;
+    fighterAIndex = idx;
+    document.querySelectorAll(".player-dial-card").forEach(function(el, i) {
+      el.classList.toggle("selected-for-compare", i === idx);
+    });
+    updateSpotlightDossier();
+    document.getElementById("selectFighterA").value = fighterAIndex;
+    updateComparisonArena();
+  }
+});
+
+// Clicking table rows
+document.getElementById("all10TableBody").addEventListener("click", function(e) {
+  var tr = e.target.closest("tr");
+  if (!tr) return;
+  var idx = parseInt(tr.getAttribute("data-idx"), 10);
+  if (!isNaN(idx)) {
+    activeRankIndex = idx;
+    fighterAIndex = idx;
+    document.querySelectorAll(".player-dial-card").forEach(function(el, i) {
+      el.classList.toggle("selected-for-compare", i === idx);
+    });
+    updateSpotlightDossier();
+    document.getElementById("selectFighterA").value = fighterAIndex;
+    updateComparisonArena();
+    document.getElementById("sectionComparison").scrollIntoView({ behavior: 'smooth' });
+  }
+});
+
+// Fighter Selectors
+document.getElementById("selectFighterA").addEventListener("change", function(e) {
+  fighterAIndex = parseInt(e.target.value, 10);
+  updateComparisonArena();
+});
+document.getElementById("selectFighterB").addEventListener("change", function(e) {
+  fighterBIndex = parseInt(e.target.value, 10);
+  updateComparisonArena();
+});
+
+// Swap Button
+document.getElementById("btnSwapFighters").addEventListener("click", function() {
+  var temp = fighterAIndex;
+  fighterAIndex = fighterBIndex;
+  fighterBIndex = temp;
+  document.getElementById("selectFighterA").value = fighterAIndex;
+  document.getElementById("selectFighterB").value = fighterBIndex;
+  updateComparisonArena();
+});
+
+// Quick Matchup Presets
+document.getElementById("quickMatchupsBox").addEventListener("click", function(e) {
+  var btn = e.target.closest(".quick-matchup-pill");
+  if (!btn) return;
+  fighterAIndex = parseInt(btn.getAttribute("data-a"), 10);
+  fighterBIndex = parseInt(btn.getAttribute("data-b"), 10);
+  document.getElementById("selectFighterA").value = fighterAIndex;
+  document.getElementById("selectFighterB").value = fighterBIndex;
+  updateComparisonArena();
+});
+
+// Theme Switcher
+var currentTheme = localStorage.getItem("rr_dash_theme") || "dark";
+if (currentTheme === "light") {
+  document.documentElement.setAttribute("data-theme", "light");
+}
+
+document.getElementById("themeBtn").addEventListener("click", function() {
+  var active = document.documentElement.getAttribute("data-theme");
+  var newTheme = active === "light" ? "dark" : "light";
+  if (newTheme === "light") {
+    document.documentElement.setAttribute("data-theme", "light");
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+  }
+  localStorage.setItem("rr_dash_theme", newTheme);
+
+  if (donutChart) {
+    donutChart.options.datasets[0].borderColor = newTheme === "light" ? "#ffffff" : "#111628";
+    donutChart.update();
+  }
+  updateComparisonArena();
+});
+
+// Initial boot
+renderAll10Grid();
+populateFighterSelects();
+updateComparisonArena();
+initWeightsDonut();
+</script>
+</body>
+</html>
